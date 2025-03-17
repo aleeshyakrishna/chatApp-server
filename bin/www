@@ -1,0 +1,124 @@
+#!/usr/bin/env node
+
+import app from '../app.js';  // Import the app module
+import debug from 'debug';
+import http from 'http';
+import dotenv from 'dotenv';
+import { Server } from 'socket.io';
+
+dotenv.config();
+
+const serverDebug = debug('server:server');
+
+/**
+ * Get port from environment and store in Express.
+ */
+const port = normalizePort(process.env.PORT || '5000');
+app.set('port', port);
+
+/**
+ * Create HTTP server.
+ */
+const server = http.createServer(app);
+
+/**
+ * Set up Socket.IO with the HTTP server
+ */
+const io = new Server(server, {
+  cors: {
+    origin: process.env.CLIENT_URL || "*",
+    methods: ["GET", "POST"]
+  }
+});
+
+// Socket.IO connection handler
+io.on('connection', (socket) => {
+  console.log(`Socket connected: ${socket.id}`);
+
+  // Handle client disconnection
+  socket.on('disconnect', () => {
+    console.log(`Socket disconnected: ${socket.id}`);
+  });
+
+  // Example of custom event handling
+  socket.on('message', (data) => {
+    console.log(`Message from ${socket.id}: ${data}`);
+    // Broadcast to all clients except sender
+    socket.broadcast.emit('message', data);
+  });
+
+  // Room joining functionality
+  socket.on('join-room', (roomId) => {
+    socket.join(roomId);
+    console.log(`Socket ${socket.id} joined room ${roomId}`);
+    socket.to(roomId).emit('user-joined', socket.id);
+  });
+
+  // Room leaving functionality
+  socket.on('leave-room', (roomId) => {
+    socket.leave(roomId);
+    console.log(`Socket ${socket.id} left room ${roomId}`);
+    socket.to(roomId).emit('user-left', socket.id);
+  });
+});
+
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+server.listen(port, () => {
+  console.log(`🚀 Server running on port ${port}`);
+  console.log(`🔌 Socket.IO initialized`);
+});
+
+server.on('error', onError);
+server.on('listening', onListening);
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+function normalizePort(val) {
+  const port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    return val; // Named pipe
+  }
+
+  if (port >= 0) {
+    return port; // Port number
+  }
+
+  return false;
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+function onError(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  const bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port;
+
+  switch (error.code) {
+    case 'EACCES':
+      console.error(`${bind} requires elevated privileges`);
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(`${bind} is already in use`);
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+function onListening() {
+  const addr = server.address();
+  const bind = typeof addr === 'string' ? `pipe ${addr}` : `port ${addr.port}`;
+  serverDebug(`Listening on ${bind}`);
+}
