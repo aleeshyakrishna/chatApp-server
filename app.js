@@ -18,20 +18,14 @@ const app = express();
 const httpServer = createServer(app);
 
 app.use(cors({
-  origin: [
-    "http://localhost:3000",
-    "https://chat-app-client-pink-nine.vercel.app"
-  ],
+  origin: "http://localhost:3000",
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
 
 const io = new Server(httpServer, {
   cors: {
-    origin: [
-      "http://localhost:3000",
-      "https://chat-app-client-pink-nine.vercel.app"
-      ],
+    origin: "http://localhost:3000",
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -78,7 +72,7 @@ app.use((err, req, res, next) => {
 
 // Start the HTTP server
 httpServer.listen(5000, () => {
-  console.log("🚀 Server is running");
+  console.log("🚀 Server is running on http://localhost:5000");
 });
 
 export { httpServer, app };
