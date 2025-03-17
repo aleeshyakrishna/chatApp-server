@@ -20,7 +20,7 @@ const httpServer = createServer(app);
 app.use(cors({
   origin: [
     "http://localhost:3000",
-    "https://chat-app-client-pink-nine.vercel.app/"
+    "https://chat-app-client-pink-nine.vercel.app"
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
@@ -30,7 +30,7 @@ const io = new Server(httpServer, {
   cors: {
     origin: [
       "http://localhost:3000",
-      "https://chat-app-client-pink-nine.vercel.app/"
+      "https://chat-app-client-pink-nine.vercel.app"
       ],
     methods: ["GET", "POST"],
     credentials: true
